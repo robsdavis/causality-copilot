@@ -1,0 +1,8 @@
+[server]
+maxUploadSize = 1000
+
+[client]
+showSidebarNavigation = false
+
+[theme]
+base = "dark"
