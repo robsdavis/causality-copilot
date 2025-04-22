@@ -111,14 +111,19 @@ def cpdag_to_json(cpdag: GeneralGraph) -> str:
 def update_dag(
     tc: ToolCommunicator,
     dag_pickle_path: str,
-    node1: str,
-    node2: str,
-    new_direction: str,  # Expected: "node1->node2" or "node2->node1" or "node1-x-node2"
-    nodes_to_remove: Optional[List[str]] = None,
+    edge_updates: list,  # List of dictionaries with "node1", "node2", "edge_direction"
+    nodes_to_remove: Optional[list] = None,
 ) -> None:
     """
-    Loads a serialized CPDAG or PAG from dag_pickle_path, updates the edge between node1 and node2
-    with the new direction, and optionally removes unnecessary nodes from the graph.
+    Loads a serialized CPDAG or PAG from dag_pickle_path, updates edges according to the given list of
+    edge updates, and optionally removes unnecessary nodes from the graph.
+    
+    For each edge update, a dictionary is expected with keys:
+       - "node1": Name of the first node.
+       - "node2": Name of the second node.
+       - "edge_direction": New orientation for the edge. Must be either "node1->node2" or "node2->node1"
+                           or "node1-x-node2" (or vice-versa with the node names swapped) where node names 
+                           are those provided in the dictionary.
     
     For CPDAGs, a directed edge i -> j is encoded as:
         dag.graph[i, j] = -1   and   dag.graph[j, i] = 1.
@@ -133,11 +138,13 @@ def update_dag(
     Parameters:
       - tc: ToolCommunicator for printing and setting returns.
       - dag_pickle_path: Path to the serialized CPDAG/PAG (pickle file).
-      - node1: Name of the first node.
-      - node2: Name of the second node.
-      - new_direction: New orientation for the edge. Must be either "node1->node2" or "node2->node1" or "node1-x-node2".
+      - edge_updates: A list of dictionaries, each specifying two nodes and the new edge direction.
       - nodes_to_remove: Optional list of node names to remove from the graph.
     """
+    from pathlib import Path
+    import pickle as pkl
+    import numpy as np
+
     dag_pickle_path = Path(dag_pickle_path)
     
     # Load the serialized graph (CPDAG or PAG).
@@ -155,34 +162,42 @@ def update_dag(
             tc.print("Failed to obtain node names from dag.graph:", e)
             return
 
-    # Get indices for the specified nodes.
-    try:
-        idx1 = node_names.index(node1)
-        idx2 = node_names.index(node2)
-    except ValueError as e:
-        tc.print(f"Error: One or both nodes not found in the graph's node names: {e}")
-        return
-
-    # Check if the graph is a PAG. We assume that if dag has an attribute "pag" set to True,
-    # then the graph is a PAG. Otherwise, it is assumed to be a CPDAG.
+    # Determine if the graph is a PAG.
     is_pag = hasattr(dag, "pag") and dag.pag
 
-    # Update the edge based on the provided new_direction.
-    # For a fully directed edge (both CPDAG and PAG), we use:
-    #   For node1 -> node2: set dag.graph[idx1, idx2] = -1 and dag.graph[idx2, idx1] = 1.
-    if new_direction == f"{node1}->{node2}":
-        dag.graph[idx1, idx2] = -1
-        dag.graph[idx2, idx1] = 1
-    elif new_direction == f"{node2}->{node1}":
-        dag.graph[idx1, idx2] = 1
-        dag.graph[idx2, idx1] = -1
-    elif new_direction == f"{node1}-x-{node2}" or new_direction == f"{node2}-x-{node1}":
-        dag.graph[idx1, idx2] = 0
-        dag.graph[idx2, idx1] = 0
-    else:
-        tc.print("The new_direction parameter must be either 'node1->node2', 'node2->node1, or 'node1-x-node2', with node names matching.")
-        return
+    # Process each edge update.
+    for edge in edge_updates:
+        # Extract details.
+        n1 = edge.get("node1")
+        n2 = edge.get("node2")
+        direction = edge.get("edge_direction")
 
+        # Validate presence of required keys.
+        if not all([n1, n2, direction]):
+            tc.print(f"Skipping edge update due to missing keys in dictionary: {edge}")
+            continue
+
+        # Get indices for the specified nodes.
+        try:
+            idx1 = node_names.index(n1)
+            idx2 = node_names.index(n2)
+        except ValueError as e:
+            tc.print(f"Error: One or both nodes '{n1}' or '{n2}' not found in the graph's node names: {e}")
+            continue
+
+        # Update the edge based on the provided direction.
+        if direction == f"{n1}->{n2}":
+            dag.graph[idx1, idx2] = -1
+            dag.graph[idx2, idx1] = 1
+        elif direction == f"{n2}->{n1}":
+            dag.graph[idx1, idx2] = 1
+            dag.graph[idx2, idx1] = -1
+        elif direction == f"{n1}-x-{n2}" or direction == f"{n2}-x-{n1}":
+            dag.graph[idx1, idx2] = 0
+            dag.graph[idx2, idx1] = 0
+        else:
+            tc.print(f"Unrecognized edge direction '{direction}' for edge between '{n1}' and '{n2}'. Skipping update.")
+            continue
 
     # Remove nodes if requested.
     if nodes_to_remove is not None:
@@ -203,13 +218,14 @@ def update_dag(
     # For CPDAGs, check acyclicity using the underlying NumPy array.
     if not is_pag:
         if not is_acyclic_cpdag(dag.graph):
-            tc.print("ERROR: The updated graph is not acyclic. Please ensure the updated edge does not introduce a cycle.")
+            tc.print("ERROR: The updated graph is not acyclic. Please ensure the updated edges do not introduce a cycle.")
             tc.set_returns(
-                tool_return="ERROR: The updated graph is not acyclic. Please ensure the updated edge does not introduce a cycle.",
-                user_report=["ERROR: The updated graph is not acyclic. Please ensure the updated edge does not introduce a cycle."]
+                tool_return="ERROR: The updated graph is not acyclic. Please ensure the updated edges do not introduce a cycle.",
+                user_report=["ERROR: The updated graph is not acyclic. Please ensure the updated edges do not introduce a cycle."]
             )
             return
 
+    # Update file naming.
     old_stem = dag_pickle_path.stem
     n = 1
     if old_stem.split("_")[-1].isdigit():
@@ -237,12 +253,11 @@ def update_dag(
     tc.print("Updated graph has been serialized and saved at:", new_file_path)
     tc.set_returns(
         tool_return=(
-            f"Edge between {node1} and {node2} updated to {new_direction}. "
-            f"Updated graph has been saved to {new_file_path} and plotted to {plot_file_path}"
+            f"Edges updated as specified. Updated graph has been saved to {new_file_path} and plotted to {plot_file_path}."
         ),
         user_report=[
             f"Updated graph saved at: {new_file_path}",
-            f"Plot saved at: {plot_file_path}"
+            f"Plot saved at: {plot_file_path}",
             f"dag_json: {dag_json}",
         ],
     )
@@ -250,16 +265,12 @@ def update_dag(
 class UpdateDAG(ToolBase):
     def _execute(self, **kwargs: Any) -> ToolReturnIter:
         dag_pickle_path = os.path.join(self.working_directory, kwargs["dag_pickle_path"])
-        node1 = kwargs["node1"]
-        node2 = kwargs["node2"]
-        new_direction = kwargs["new_direction"]
+        edge_updates = kwargs["edge_updates"]
         nodes_to_remove = kwargs.get("nodes_to_remove")
         thrd, out_stream = execute_tool(
             update_dag,
             dag_pickle_path=dag_pickle_path,
-            node1=node1,
-            node2=node2,
-            new_direction=new_direction,
+            edge_updates=edge_updates,
             nodes_to_remove=nodes_to_remove,
             wd=self.working_directory,
         )
@@ -290,36 +301,48 @@ class UpdateDAG(ToolBase):
                     "properties": {
                         "dag_pickle_path": {
                             "type": "string",
-                            "description": "Path to the serialized CPDAG/PAG (pickle file).",
+                            "description": "Path to the serialized CPDAG/PAG (pickle file)."
                         },
-                        "node1": {
-                            "type": "string",
-                            "description": "Name of the first node of the edge to update.",
-                        },
-                        "node2": {
-                            "type": "string",
-                            "description": "Name of the second node of the edge to update.",
-                        },
-                        "new_direction": {
-                            "type": "string",
-                            "description": (
-                                """
-The new direction for the edge. Must be one of 'node1->node2', 'node2->node1', 'node1-x-node2' or 'node2-x-node1'.
-'node1->node2' or 'node2->node1' will set a directed edge between node1 and node2 in the specified direction.
-'node1-x-node2' or 'node2-x-node1' will set an undirected edge between node1 and node2.
-"""
-                            ),
+                        "edge_updates": {
+                            "type": "array",
+                            "description": "A list of dictionaries specifying multiple edge updates.",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "node1": {
+                                        "type": "string",
+                                        "description": "Name of the first node of the edge to update."
+                                    },
+                                    "node2": {
+                                        "type": "string",
+                                        "description": "Name of the second node of the edge to update."
+                                    },
+                                    "edge_direction": {
+                                        "type": "string",
+                                        "description": (
+                                            "The new direction for the edge. Must be one of 'node1->node2', 'node2->node1', "
+                                            "'node1-x-node2', or 'node2-x-node1'. 'node1->node2' or 'node2->node1' will set a directed "
+                                            "edge between node1 and node2 in the specified direction. 'node1-x-node2' or 'node2-x-node1' "
+                                            "will set an undirected edge between node1 and node2."
+                                        )
+                                    }
+                                },
+                                "required": ["node1", "node2", "edge_direction"]
+                            }
                         },
                         "nodes_to_remove": {
                             "type": "array",
-                            "items": {"type": "string"},
                             "description": "Optional list of node names to remove from the graph.",
-                        },
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     },
-                    "required": ["dag_pickle_path", "node1", "node2", "new_direction"],
-                },
-            },
+                    "required": ["dag_pickle_path", "edge_updates"]
+                }
+            }
         }
+
 
     @property
     def description_for_user(self) -> str:

@@ -67,3 +67,6 @@ db.json
 notebooks/
 data/
 docs_old/
+
+experiments/results/
+results.pkl

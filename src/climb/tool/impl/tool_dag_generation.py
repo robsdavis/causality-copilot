@@ -9,10 +9,12 @@ from networkx.drawing.nx_pydot import graphviz_layout
 from causallearn.search.ConstraintBased.PC import pc
 from causallearn.search.ConstraintBased.FCI import fci
 from causallearn.search.ScoreBased.GES import ges
+from notears.linear import notears_linear
 
 # from causallearn.utils.PCUtils.BackgroundKnowledge import BackgroundKnowledge
 
-from climb.tool.dag_helpers import enumerate_dags, find_undirected_edges, cpdag_to_json
+
+from climb.tool.dag_helpers import enumerate_dags, find_undirected_edges, cpdag_to_json, run_notears
 from climb.tool.impl.plot_dag import plot_dag_graphviz
 from ..tool_comms import ToolCommunicator, ToolReturnIter, execute_tool
 from ..tools import ToolBase
@@ -29,6 +31,9 @@ DAG_GEN_METHODS = {
     "fci": lambda data, node_names, alpha, indep_test: {"G": fci(
         data, alpha=alpha, node_names=node_names, indep_test=indep_test
     )[0]},
+    "notears": lambda data, node_names, alpha, indep_test: run_notears(
+        data, node_names, lambda1=alpha, loss_type='l2'
+    ),
 }
 
 def generate_dag(

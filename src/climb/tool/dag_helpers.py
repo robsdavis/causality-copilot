@@ -1,6 +1,10 @@
+from typing import Any, Dict, List
 from itertools import product
 import json
+import networkx as nx
+import numpy as np
 from causallearn.graph import GeneralGraph
+from notears.linear import notears_linear
 
 
 def is_acyclic(adj_matrix):
@@ -132,3 +136,20 @@ def cpdag_to_json(cpdag: GeneralGraph) -> str:
     }
     
     return json.dumps(graph_dict, indent=4)
+
+def run_notears(data: np.ndarray, node_names: List[str], *, lambda1: float, loss_type: str) -> Dict[str, Any]:
+    """
+    Wraps the original notears_linear call and returns a networkx DiGraph under key "G".
+    """
+    # data is (n_samples, n_vars)
+    W_est = notears_linear(data, lambda1=lambda1, loss_type=loss_type)
+    G = nx.DiGraph()
+    G.add_nodes_from(node_names)
+    n = W_est.shape[0]
+    for i in range(n):
+        for j in range(n):
+            w = W_est[i, j]
+            if abs(w) > 1e-3:
+                # NOTEARs convention: edge from j→i
+                G.add_edge(node_names[j], node_names[i], weight=w)
+    return {"G": G}
