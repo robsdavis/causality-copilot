@@ -52,8 +52,7 @@ def estimate_ate(
     df = pd.read_csv(df_file_path)
 
     # Use a default model if none is provided.
-    if model is None:
-        model = RandomForestRegressor()
+    model = RandomForestRegressor()
 
     # Define features: treatment and adjustment_covariates.
     tc.print(f"The adjustment set used for the ATE calculation: {adjustment_covariates}.")
@@ -94,8 +93,11 @@ def estimate_ate(
     else:
         tc.print("No ground truth treatment effect column provided; PEHE will not be calculated.")
 
+    # round the ATE and PEHE for better readability.
+    ate = round(ate, 4) 
     tc.print(f"Estimated ATE: {ate}")
     if pehe is not None:
+        pehe = round(pehe, 4)
         tc.print(f"Estimated PEHE: {pehe}")
     
     # Build the messages for tool_return and user_report.

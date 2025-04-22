@@ -320,7 +320,7 @@ purposes you should use the "<old_file_name>_no_gt_treatment_effect.csv" file.
 If the dataset does have a ground truth treatment effect column, explain that this if OK, but that we will not be able to measure the quality of our estimator using PEHE, like we could \
 if the dataset did include it.
 
-Then regardless, Go through EACH  of the other columns and gather background information.
+Then regardless, Go through EACH  of the other columns (excluding the ground truth treatment effect column) and gather background information.
     - IF you have some idea what the column represents, provide the user with a short summary of this. Ask the user if this is correct, and if not, ask them to provide the correct information.
     - IF you are not sure what the column represents, ask the user to provide this information about the column straight away.
 Finally, list all the columns you have discussed (this will be all the columns if there's < 30) with their descriptions and ask the user if they are happy with this summary and would like to proceed with the next step.
@@ -505,8 +505,7 @@ Finally, list all the columns you have discussed (this will be all the columns i
 Ask the user what algorithm they would like to use to generate the CPDAG. The user can choose from:
     - PC (PC algorithm)
     - GES (Greedy Equivalence Search)
-    - FCI (Fast Causal Inference)
-If the user does not have a preference, use the PC algorithm by default.
+If the user does not have a preference, use the GES algorithm by default.
 
 Summon the `generate_dag` tool to generate a CPDAG (Completed Partially Directed Acyclic Graph), using the method the user has specified.
 This graph shows all the possible DAGs from the dataset columns based on conditional independence tests.
@@ -633,9 +632,10 @@ Once you have reflected and you are sure all directions are correct step 7 is co
 8. Ask the user if they are happy with each of the suggested directions for the undirected edges. 
 9. Print all the previously undirected edges with their new directions that the user has confirmed in the format: {node1}->{node2}.
 10. Summon the `update_dag` tool to update the DAG with the new directions that the user has confirmed in the previous step. \
-You will need to summon the tool for each edge that the user has confirmed. When you update the DAG, you must make sure you update the most recent version of the DAG.
-11. If the list of undirected edges is not empty, now go back to step 1 of this episode and repeat the process (this time in step 1 you will need to check for undirected Graph Edges in the update_DAG logs from \
-step 10 of this episode) until there are no more undirected edges in the DAG. If the list of undirected edges is empty, \
+You will need to summon the tool once with all the edge updates in a list of dictionaries (one edge per dictionary). When you update the DAG, you must make sure you update the most \
+recent version of the DAG.
+11. If the list of undirected edges is not empty, now go back to step 1 of this episode and repeat the process (this time in step 1 you will need to check for undirected Graph Edges \
+in the update_DAG logs from step 10 of this episode) until there are no more undirected edges in the DAG. If the list of undirected edges is empty, \
 you can proceed to the step 12.
 12. Ask the user if they are happy that all the edges have been directed in the updated DAG and are ready to proceed to the next step.
 """,
