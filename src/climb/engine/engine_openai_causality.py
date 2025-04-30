@@ -870,10 +870,10 @@ outcomes of previous tasks or episodes.
 
 PLAN = [
     "ENV_1",
-    # "ENV_2",
-    # "ENV_3",
-    # "INFO_1",
-    # "INFO_3",
+    "ENV_2",
+    "ENV_3",
+    "INFO_1",
+    "INFO_3",
     "COL_1",
     "DAG_1",
     "LIT_1", # TODO: swap out with DAG_2 when ready
