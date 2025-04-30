@@ -505,6 +505,13 @@ Finally, list all the columns you have discussed (this will be all the columns i
 Ask the user what algorithm they would like to use to generate the CPDAG. The user can choose from:
     - PC (PC algorithm)
     - GES (Greedy Equivalence Search)
+    - FCI (Fast Causal Inference)
+    - CAMML (Causal Additive Model)
+    - Direct-LiNGAM (Direct linear non-gaussian acyclic model)
+    - ICA-LiNGAM (Independent component analysis - linear non-gaussian acyclic model)
+    - Notears (Neural Causal Inference)
+    - Score (Score-based algorithm)
+
 If the user does not have a preference, use the GES algorithm by default.
 
 Summon the `generate_dag` tool to generate a CPDAG (Completed Partially Directed Acyclic Graph), using the method the user has specified.
@@ -581,7 +588,10 @@ Explain to the user the in the graph plot black lines represent directed edges, 
         "selection_condition": None,
         "episode_name": "Upload literature json file",
         "episode_details": """
-- Explain to the user that you are going to establish the causal relationships between the features in the dataset that \
+- Given the discussion so far, and the logs of the tools (generate_dag and update_dag) you have seen, decide whether there are any undirected edges in the DAG.
+- If there are no undirected edges in the DAG, Ask the user if they are happy with the DAG and if they are ready to proceed to the next step. If they are happy, proceed \
+to the next step. If they are not happy, ask them what they would like to change.
+- If there are undirected edges, explain to the user that you are going to establish the causal relationships between the features in the dataset that \
 are joined by an undirected edge in the DAG. To do this you will need to review the scientific literature.
 - Ask them to upload the json file that contains the relevant literature about the dataset. To allow this,
 summon the `upload_json_file` tool.
@@ -863,7 +873,7 @@ PLAN = [
     "ENV_2",
     "ENV_3",
     "INFO_1",
-    # "INFO_3",
+    "INFO_3",
     "COL_1",
     "DAG_1",
     "LIT_1", # TODO: swap out with DAG_2 when ready

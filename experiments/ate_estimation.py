@@ -144,7 +144,7 @@ def main():
                 random_state=seed,
             )
         else:
-            raise ValueError("Invalid learner type. Choose from T, S, X, DR, DRAGONNET, TARNET, BART, or CFRNET.")
+            raise ValueError("Invalid learner type. Choose from T, S, X, DR, DRAGONNET, TARNET, BART, CF, or CFRNET.")
 
         # Fit the learner on the full dataset (or you can restrict to the validation set if desired).
         learner.fit(Y, T, X=X)
