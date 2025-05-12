@@ -1,4 +1,5 @@
 import os
+from typing import Any
 import pickle as pkl
 import logging
 import importlib
@@ -10,54 +11,51 @@ import pandas as pd
 
 from climb.tool.dag_helpers import enumerate_dags, find_undirected_edges, cpdag_to_json
 from climb.tool.impl.plot_dag import plot_dag_graphviz
-from ..tool_comms import execute_tool
+from ..tool_comms import execute_tool, ToolReturnIter, ToolCommunicator
 from ..tools import ToolBase
+
+# relative import from the same package
+from .dag_gen_methods.dag_discovery_base import DAGDiscoveryBase
+
 
 # —– DISCOVER & VALIDATE PLUGINS —–
 DAG_GEN_METHODS = {}
 _pkg_name = f"{__package__}.dag_gen_methods"
 _pkg = importlib.import_module(_pkg_name)
 
+
 for finder, module_name, ispkg in pkgutil.iter_modules(_pkg.__path__):
     module = importlib.import_module(f"{_pkg_name}.{module_name}")
-    NAME = getattr(module, "NAME", None)
-    run_fn = getattr(module, "run", None)
 
-    if not (isinstance(NAME, str) and callable(run_fn)):
-        logging.warning(f"Skipping plugin {module_name!r}: missing NAME or run()")
+    # find subclass of DAGDiscoveryBase
+    plugin_cls = None
+    for _, obj in inspect.getmembers(module, inspect.isclass):
+        if issubclass(obj, DAGDiscoveryBase) and obj is not DAGDiscoveryBase:
+            plugin_cls = obj
+            break
+    if plugin_cls is None:
+        logging.warning(f"Skipping plugin {module_name!r}: no DAGDiscoveryBase subclass found")
         continue
 
-    sig = inspect.signature(run_fn)
-    params = sig.parameters
-    if "data" not in params or "node_names" not in params:
-        logging.warning(
-            f"Skipping plugin {module_name!r}: run() must accept at least 'data' and 'node_names'"
-        )
+    # access plugin name and run
+    try:
+        plugin_name = plugin_cls().NAME.lower()
+    except Exception as e:
+        logging.warning(f"Skipping plugin {module_name!r}: invalid NAME property: {e}")
         continue
 
-    # wrap to enforce {"G":...} return
-    def _make_validator(fn, plugin_name):
-        def validated(**kwargs):
-            out = fn(**kwargs)
-            if not (isinstance(out, dict) and "G" in out):
-                raise RuntimeError(
-                    f"Plugin '{plugin_name}' must return a dict with key 'G'; got {out!r}"
-                )
-            return out
-        return validated
-
-    DAG_GEN_METHODS[NAME.lower()] = _make_validator(run_fn, NAME)
+    DAG_GEN_METHODS[plugin_name] = plugin_cls.run
 
 PLUGIN_KEYS = sorted(DAG_GEN_METHODS.keys())
 
 
 def generate_dag(
-    tc,
+    tc: ToolCommunicator,
     data_file_path: str,
     dag_pickle_path: str,
     workspace: str,
     dag_gen_method: str = "pc",
-    **plugin_args
+    **plugin_args: Any,
 ) -> None:
     ws = Path(workspace)
     df = pd.read_csv(ws / data_file_path)
@@ -76,7 +74,6 @@ def generate_dag(
 
     # inspect plugin signature and build only the args it declared
     sig = inspect.signature(run_fn)
-    
     call_args = {}
     for name in sig.parameters:
         if name in plugin_args:
@@ -110,8 +107,9 @@ def generate_dag(
     dag_json = cpdag_to_json(graph)
     tc.set_returns(
         tool_return=(
-            f"Generated via {dag_gen_method.upper()}; "
-            f"image at {img_path}; {num} possible DAGs; serialized at {dag_pickle_path}"
+            f"Generated via {dag_gen_method.upper()}.\n"
+            f"image at {img_path} \n{num} possible DAGs \nserialized at {dag_pickle_path}\n\n"
+            f"DAG JSON: {dag_json}"
         ),
         user_report=[
             "📊 **Graph Output**",
@@ -123,7 +121,7 @@ def generate_dag(
 
 
 class GenerateDAGs(ToolBase):
-    def _execute(self, **kwargs):
+    def _execute(self, **kwargs) -> ToolReturnIter:
         data_fp = os.path.join(self.working_directory, kwargs.pop("data_file_path"))
         pickle_fp = os.path.join(self.working_directory, kwargs.pop("dag_pickle_path"))
 
@@ -181,3 +179,4 @@ class GenerateDAGs(ToolBase):
                 },
             },
         }
+    

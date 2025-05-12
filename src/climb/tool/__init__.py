@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from .impl.tool_adjustment_set import ComputeOptimalAdjSets
 from .impl.tool_descriptive_stats import DescriptiveStatistics
-from .impl.tool_estimate_average_treatment_effect import EstimateATE
+from .impl.tool_ate_estimation import EstimateATE
 from .impl.tool_exploratory_data_analysis import ExploratoryDataAnalysis
 from .impl.tool_hardware import HardwareInfo
 from .impl.tool_dag_generation import GenerateDAGs

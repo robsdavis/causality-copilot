@@ -502,31 +502,38 @@ Finally, list all the columns you have discussed (this will be all the columns i
         "selection_condition": None,
         "episode_name": "Generate CPDAG using algorithm",
         "episode_details": """
-1) Ask the user if they would like to discover the causal relationships between the features in the dataset. \
-    If they say no proceed with the next step in the plan. If they say yes, continue with this step
-2 ) Ask the user what algorithm they would like to use to generate the CPDAG. The user can choose from:
+Ask the user what algorithm they would like to use to generate the CPDAG. The user can choose from:
     - PC (PC algorithm)
     - GES (Greedy Equivalence Search)
-    - FCI (Fast Causal Inference)
-    - CAMML (Causal Additive Model)
-    - Direct-LiNGAM (Direct linear non-gaussian acyclic model)
-    - ICA-LiNGAM (Independent component analysis - linear non-gaussian acyclic model)
-    - Notears (Neural Causal Inference)
-    - Score (Score-based algorithm)
-
 If the user does not have a preference, use the GES algorithm by default.
 
 Summon the `generate_dag` tool to generate a CPDAG (Completed Partially Directed Acyclic Graph), using the method the user has specified.
 This graph shows all the possible DAGs from the dataset columns based on conditional independence tests.
 
-The `generate_dag` tool prints the graph in JSON format. Look for the list of undirected edges in the output.
+The `generate_dag` tool prints the graph in JSON with the following format:
+```
+{
+    "nodes": ["A", "B", "C"],
+    "directed_edges": [
+        {"from": "A", "to": "B"},
+        {"from": "B", "to": "C"},
+        ...
+    ],
+    "undirected_edges": [
+        {
+            "node1": "A",
+            "node2": "C"
+        }
+    ]
+}
+```
 
 Re-state the undirected edges to the user in the format: {node1} --- {node2}.
 
 Explain to the user the in the graph plot black lines represent directed edges, while red dashed lines represent undirected edges.
 """,
         "coordinator_guidance": None,
-        "worker_guidance": "You MUST NOT generate code to check for undirected edges. Remember what the `generate_dag` tool report said. It listed them in a json format.",
+        "worker_guidance": None,
         "tools": ["generate_dag"],
     },
 # ----
@@ -574,17 +581,13 @@ Explain to the user the in the graph plot black lines represent directed edges, 
         "selection_condition": None,
         "episode_name": "Upload literature json file",
         "episode_details": """
-- Given the discussion so far, and the logs of the tools (generate_dag and update_dag) you have seen, decide whether there are any undirected edges in the DAG.
-- If there are no undirected edges in the DAG, Ask the user if they are happy with the DAG and if they are ready to proceed to the next step. If they are happy, proceed \
-to the next step. If they are not happy, ask them what they would like to change.
-- If there are undirected edges, explain to the user that you are going to establish the causal relationships between the features in the dataset that \
+- Explain to the user that you are going to establish the causal relationships between the features in the dataset that \
 are joined by an undirected edge in the DAG. To do this you will need to review the scientific literature.
 - Ask them to upload the json file that contains the relevant literature about the dataset. To allow this,
 summon the `upload_json_file` tool.
 """,
-        "coordinator_guidance": "Skip this step if we haven'tnenerated a DAG. during the session",
-        "worker_guidance": "Do not generate your own code to find the undirected edges in the DAG or load the json file. To find the undirected edges just remember \
-            what the `generate_dag tool report said.` To load the json file you must use the `upload_json_file` tool.",
+        "coordinator_guidance": None,
+        "worker_guidance": "Do not generate your own code to load the json file, you must use the `upload_json_file` tool to complete this task.",
         "tools": ["upload_json_file"],
     },
     {
@@ -636,7 +639,7 @@ in the update_DAG logs from step 10 of this episode) until there are no more und
 you can proceed to the step 12.
 12. Ask the user if they are happy that all the edges have been directed in the updated DAG and are ready to proceed to the next step.
 """,
-        "coordinator_guidance": "Skip this step if we haven'tnenerated a DAG. during the session",
+        "coordinator_guidance": None,
         "worker_guidance": """\
 - The json file should be of the following format:
 ```
@@ -765,7 +768,7 @@ to guide them with the correct format.
 
 Each of these sets serves as a candidate for the variables to adjust for in order to estimate the causal effect of a treatment on an outcome, but they differ in how “optimal” or “minimal” they are with respect to size and necessity.
 """,
-        "coordinator_guidance": "Skip this step if we haven't generated a DAG during the session.",
+        "coordinator_guidance": None,
         "worker_guidance": "You must not generate your own code to complete this step. You must use the `compute_optimal_adj_sets` tool.",
         "tools": ["compute_optimal_adj_sets"], 
     },
@@ -775,21 +778,10 @@ Each of these sets serves as a candidate for the variables to adjust for in orde
         "selection_condition": None,
         "episode_name": "Estimate the causal effect",
         "episode_details": """
-Ask the user what `ate_method` they would like to use to estimate the causal effect. The user can choose from:
-    - `bart`
-    - `causal_forest`
-    - `cfrnet`
-    - `dragonnet`
-    - `random_forest_regression`
-    - `t-learner`
-    - `tarnet`
-    - `s-learner`
-    - `x-learner`
-
 Using the adjustment set obtained in the previous step, call `estimate_ate` to estimate the causal effect of the intervention \
 (do operation) on the outcome. If the adjustment set is empty the it should be set to just be the treatment column. Present the causal effect estimate to the user.
 """,
-        "coordinator_guidance": "Perform this step and all subsequent step irrespective of whether the DAG was generated or not.",
+        "coordinator_guidance": None,
         "worker_guidance": "You must not generate your own code to complete this step. You must use the `estimate_ate` tool. \
 When summoning this tool, use the datafile with the ground truth treatment effect. This is the file name ending `_original_with_gt_treatment_effect.csv`",
         "tools": ["estimate_ate"],
@@ -868,9 +860,9 @@ outcomes of previous tasks or episodes.
 
 PLAN = [
     "ENV_1",
-    # "ENV_2",
-    # "ENV_3",
-    # "INFO_1",
+    "ENV_2",
+    "ENV_3",
+    "INFO_1",
     # "INFO_3",
     "COL_1",
     "DAG_1",

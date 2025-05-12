@@ -24,8 +24,10 @@ def test_dag_generation(df_classification_path, df_regression_path, dag_generati
     Task coverage include classification, regression, and survival (TODO)"""
 
     mock_tc = ToolCommunicator()
-    data_dir = Path.cwd() / "data/causality/sodium_sbp"
-    data_file = data_dir / "synthetic_hypertension_sodium_binary_data_no_gt.csv"
+    # data_dir = Path.cwd() / "data/causality/sodium_sbp"
+    # data_file = data_dir / "synthetic_hypertension_sodium_binary_data_no_gt.csv"
+    data_dir = Path.cwd() / "data/causality/survey/"
+    data_file = data_dir / "survey.csv"
 
     # Execute function with mock_tc
     generate_dag(

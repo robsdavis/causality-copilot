@@ -68,5 +68,5 @@ notebooks/
 data/
 docs_old/
 
-experiments/results/
+experiments/
 results.pkl
