@@ -65,8 +65,16 @@ keys.env
 az_openai_config.yml
 db.json
 notebooks/
-data/
 docs_old/
 
 experiments/
 results.pkl
+
+
+data/*
+!data/causality/
+data/causality/*
+!data/causality/sodium_sbp/
+!data/causality/survey/
+data/causality/survey/survey.txt
+data/causality/survey/to_csv.ipynb
