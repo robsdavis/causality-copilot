@@ -1,6 +1,6 @@
-# <img src="docs/assets/climb-logo-no-text.png" height=25> Causality-CLIMB
+# <img src="docs/assets/climb-logo-no-text.png" height=25> CATE-B
 
-This repository contains **Causality-CliMB**, a Data-Centric copilot system that builds upon the [CliMB](https://github.com/vanderschaarlab/climb) ecosystem.
+This repository contains **CATE-B**, a copilot system that builds upon the [CliMB](https://github.com/vanderschaarlab/climb) ecosystem for causality.
 
 ## 📦 Installation: CliMB
 The installation process is analogous to the original CliMB system, with the only difference being in the [📈 Install the CliMB package step](https://climb-ai.readthedocs.io/en/latest/installation.html#install-the-climb-package). You should replace the command:
@@ -12,9 +12,9 @@ with:
 git clone <git address>
 ```
 
-## 🚀 Usage: Causality-CLIMB
+## 🚀 Usage: CATE-B
 
-In order to run Causality-CLIMB, you can follow the original [CliMB quickstart guide](https://climb-ai.readthedocs.io/en/latest/quickstart.html) but choose the *engine* (in the *Research Management* page, *Select engine* dropdown) to be:
+In order to run CATE-B, you can follow the original [CliMB quickstart guide](https://climb-ai.readthedocs.io/en/latest/quickstart.html) but choose the *engine* (in the *Research Management* page, *Select engine* dropdown) to be:
 ```
 openai_causality
 ```
@@ -28,12 +28,12 @@ depending on the OpenAI model provider you are using.
 
 The code inside [`impl_agpl` directory](./src/climb/tool/impl_agpl) is only compatible with the [AGPL-3.0 license](https://choosealicense.com/licenses/agpl-3.0/).
 
-It is not compatible with the [Apache-2.0 license](https://choosealicense.com/licenses/apache-2.0/), under which the core of the project (Causality-CLIMB **core**) is licensed.
+It is not compatible with the [Apache-2.0 license](https://choosealicense.com/licenses/apache-2.0/), under which the core of the project (CATE-B **core**) is licensed.
 
-If you wish to use the extra tools provided in the `impl_agpl` directory, you must explicitly install the `[extra]` version of Causality-CLIMB like so:
+If you wish to use the extra tools provided in the `impl_agpl` directory, you must explicitly install the `[extra]` version of CATE-B like so:
 
 ```bash
-# Clone the *Causality-CLIMB* repository.
+# Clone the *CATE-B* repository.
 git clone <git address>
 cd climb
 # Install from source
