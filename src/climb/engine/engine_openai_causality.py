@@ -25,6 +25,7 @@ from climb.tool import list_all_tool_names, list_all_tool_specs
 from ._azure_config import (
     AzureOpenAIConfig,
 )
+
 from ._code_execution import code_extract, is_code_generated
 from ._engine import (
     ChunkTracker,
@@ -536,7 +537,7 @@ Explain to the user the in the graph plot black lines represent directed edges, 
 # Start with the edge that has the most connections. Show the user the ordered list of undirected edges and ask them \
 # if they are happy to proceed with directing these edges in this order.
 #     {
-#         "episode_id": "LIT_1", # Retrieve papers from web search TODO: Episode in progress
+#         "episode_id": "LIT_1", # Retrieve papers from web search
 #         "status_reason": None,
 #         "selection_condition": None,
 #         "episode_name": "Retrieve papers to evidence edge directions",
@@ -672,67 +673,6 @@ Do not generate your own code to update the DAG, you must use the `update_dag` t
 """,
         "tools": ["update_dag"],
     },
-#     {
-#         "episode_id": "LIT_3", # TODO: Episode in progress
-#         "status_reason": None,
-#         "selection_condition": None,
-#         "episode_name": "Update dag with new directions",
-#         "episode_details": """
-# - Summon the `update_dag` tool to update the CPDAG with the new directions that the user has confirmed in the previous step.
-# You will need to summon the tool for each edge that the user has confirmed.
-# """,
-#         "coordinator_guidance": None,
-#         "worker_guidance": "Do not generate your own code to complete this task, you must use the `update_dag` tool.",
-#         "tools": ["update_dag"],
-#     },
-
-
-#     {
-#         "episode_id": "LIT_1", # TODO: DELETE if not using PDFs
-#         "status_reason": None,
-#         "selection_condition": None,
-#         "episode_name": "Medical Paper",
-#         "selection_condition": "None",
-#         "coordinator_guidance": None,
-#         "episode_details": f"""
-# You will work with the user to ascertain the direction of an previously undirected edge in the CPDAG. To do this \
-# you will assess a medical paper that the user provides. This will help you to determine the causal relationship between \
-# the two variables currently joined by the undirected edge.
-# - First, ask the user if they want to provide an example paper PDF. If so, then you MUST use the \
-# `upload_and_summarize_example_paper` tool (AND NOT `upload_data_file`).
-# - Then confirm the edge that you are investigating with the user.
-# - Finally, use the information from the paper to determine the direction of the edge. To do this you are looking for \
-# evidence of a causal relationship between the two variables.
-# """,
-#         "coordinator_guidance": "Do not generate your own code to complete this task, you must use the `upload_and_summarize_example_paper` tool.",
-#         "worker_guidance":  """
-# A causal relationship is one where a change in one variable causes a change in another variable. \
-# When reading the paper, look for evidence that a change in one variable causes a change in another variable. \
-# If you find evidence of a causal relationship, then you can determine the direction of the edge. \
-# If you do not find evidence of a causal relationship, then you must inform the user that you were unable to determine the direction of the edge.
-#         """,
-#         "tools": ["upload_and_summarize_example_paper"],
-#     },
-#     {
-#         "episode_id": "DAG_2",
-#         "status_reason": None,
-#         "selection_condition": None,
-#         "episode_name": "Direct undirected edges using expert advice", # TODO: How do I update edges in the DAG? workout how to serialize the DAG
-#         "episode_details": """
-# Direct the user to look at the CPDAG we just generated ask for expert advice on how to direct any undirected edges. Tell the \
-# user to look at the displayed "complete partially DAG". The undirected edges are in red dashed lines. 
-
-# Ask the user to provide directions for these edges. If the user provides directions, summon the `update_dag` function to load the CPDAG and update it \
-# with the new directions. This function will load the serialized DAG update it with the new direction and save the new updated DAG.
-
-# ASk the user if they would like to further amend the DAG with any other expert advice. If they do, repeat the process until the user is happy with the DAG.
-# """,
-#         "coordinator_guidance": None,
-#         "worker_guidance": """
-# Each time update_dag is called the resulting graph is checked to ensure it is a DAG. If it is not a DAG, because the graph \
-# contains cycles, ask the user to provide new directions, such that the graph never contains cycles.""",
-#         "tools": ["update_dag"], 
-#     },
     {
         "episode_id": "CQD",
         "status_reason": None,
@@ -868,10 +808,10 @@ outcomes of previous tasks or episodes.
 
 PLAN = [
     "ENV_1",
-    # "ENV_2",
-    # "ENV_3",
-    # "INFO_1",
-    # "INFO_3",
+    "ENV_2",
+    "ENV_3",
+    "INFO_1",
+    "INFO_3",
     "COL_1",
     "DAG_1",
     "LIT_1", # TODO: swap out with DAG_2 when ready
