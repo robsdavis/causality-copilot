@@ -2,6 +2,8 @@
 
 This repository contains **CATE-B**, a copilot system that builds upon the [CliMB](https://github.com/vanderschaarlab/climb) ecosystem for causality.
 
+The experiments from the paper can be simply recreated by launching a session in the copilot by following the instructions below. Then simply following the LLM-directed pipeline, selecting your DAG discovery method and ATE estimator of choice. The results will be reported at the end of the pipeline.
+
 ## 📦 Installation: CliMB
 The installation process is analogous to the original CliMB system, with the only difference being in the [📈 Install the CliMB package step](https://climb-ai.readthedocs.io/en/latest/installation.html#install-the-climb-package). You should replace the command:
 ```bash
@@ -23,22 +25,6 @@ or
 azure_openai_causality
 ```
 depending on the OpenAI model provider you are using.
-
-## 📃 Note on Licensing
-
-The code inside [`impl_agpl` directory](./src/climb/tool/impl_agpl) is only compatible with the [AGPL-3.0 license](https://choosealicense.com/licenses/agpl-3.0/).
-
-It is not compatible with the [Apache-2.0 license](https://choosealicense.com/licenses/apache-2.0/), under which the core of the project (CATE-B **core**) is licensed.
-
-If you wish to use the extra tools provided in the `impl_agpl` directory, you must explicitly install the `[extra]` version of CATE-B like so:
-
-```bash
-# Clone the *CATE-B* repository.
-git clone <git address>
-cd climb
-# Install from source
-pip install -e .
-```
 
 ---
 
