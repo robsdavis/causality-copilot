@@ -215,15 +215,10 @@ include_docs_end -->
 By proceeding to use this software, you agree to these terms and accept full responsibility for your use and management of any data within this system.
 
 
+<!-- Add citation details -->
+## ✍️ Citing - TBC
 
-## ✍️ Citing
-
-If you use CliMB in your work, please cite the [associated paper](http://arxiv.org/abs/2410.03736):
+If you use CliMB in your work, please cite the [associated paper]():
 ```bibtex
-@article{saveliev2024climb,
-  title={CliMB: An AI-enabled Partner for Clinical Predictive Modeling},
-  author={Saveliev, Evgeny and Schubert, Tim and Pouplin, Thomas and Kosmoliaptsis, Vasilis and van der Schaar, Mihaela},
-  journal={arXiv preprint arXiv:2410.03736},
-  year={2024}
-}
+
 ```
